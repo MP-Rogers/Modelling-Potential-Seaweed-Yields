@@ -1,0 +1,111 @@
+---
+title: "Modelling Seaweed Biomass Collection"
+author: "Matthew-Pierre Rogers"
+format: html
+editor: visual
+---
+
+# Modelling Seaweed Growth
+
+The following document is a quick projected summary of the potential biomass yield of seaweed for a 12 week (3 month) period for Kee Farms. The projections below are based on several underlying assumptions, all of which may not not be accurate. These assumptions, for the most part are listed below the projections.
+
+```{r}
+#| echo: false
+#| label: Load Packages
+#| warning: false
+library(tidyverse)
+library(plotly)
+```
+
+```{r}
+#| echo: false
+#| label: Initialize assumptions
+avg.harvested.mass<-300
+assumed.growth.rate<-0.0265
+weeks<-seq(1,12,1)
+```
+
+```{r}
+#| label: Generate Pure Harvest Mass
+#| echo: false
+
+harv.biomass<-c(0, avg.harvested.mass)
+  for (i in 3:12){
+    harv.biomass[i]<-avg.harvested.mass+harv.biomass[i-1]
+  }
+  pure.harvest<-harv.biomass
+```
+
+```{r}
+#| label: Calculating Pure Cultivation
+#| echo: false
+
+cul.biomass<-c(0, avg.harvested.mass)
+  for(i in 3:12){
+    prev.mass<-cul.biomass[i-1]
+    growth.on.prev<-prev.mass*(1+assumed.growth.rate)^7
+    cul.biomass[i]<-avg.harvested.mass+growth.on.prev
+  }
+  pure.cultivation<-cul.biomass
+```
+
+## Visualisations
+
+```{r}
+#| label: Begin Visualization
+#| echo: false
+dataset<-data.frame(weeks, pure.harvest)
+dataset<-data.frame(dataset, pure.cultivation)
+
+g1<-dataset |> ggplot(mapping = aes(x = weeks))+
+  geom_line(data = dataset, aes(y = pure.harvest), colour = "purple")+
+  geom_line(data = dataset, aes(y = pure.cultivation), colour = "green")+
+  labs(title = "Pure Harvest and Cultivation Estimates for gathered seaweed")+
+  ylab("Potential wet biomass to Market(lbs)")+
+  scale_x_continuous(breaks = seq(1,12,1))+
+  theme(plot.title = element_text(hjust = 0.5))
+g1
+```
+
+
+```{r}
+#| label: Production Possibilities Frontier
+#| echo: false
+
+ppf<-ggplot(dataset, mapping = aes(x = rev(pure.cultivation), y=pure.harvest))+
+  geom_point(alpha = 0.8, size = 1.2)+
+  geom_line()+
+  ggtitle("PPF of Seaweed Biomass Available to market")+
+  xlab("Pure Cultivation")+
+  ylab("Pure Harvest")+
+  theme(plot.title = element_text(hjust=0.5))+
+  theme(axis.text.x = element_text(angle = 35))
+print(ppf)
+
+```
+
+
+## Changing Assumptions
+After further discussion, Kee considered Dive Weeks. This would mean collection every 3 weeks, with all the rest being funneled to market.
+
+
+
+## Original Assumptions
+The above is built on a number of assumptions all of which may not be accurate. They are as follows:
+
++ Each Potential Dive trip can bring in an average of 300lbs of seaweed
++ Dive Trips for Gathering Seaweed Occur weekly
++ All Biomass on a trip is allocated to either cultivation or put to market
++ All Seaweed put to cultivation survives intact and grows at 2.65% per day, (This is the figure supporting the literature quoted figure of triple mass in 6 weeks)
+
+
+## Version Info
+The analysis was done in the version of R as specied below
+
+```{r}
+#| label: "Session Info"
+#| echo: false
+
+sessionInfo()
+```
+
